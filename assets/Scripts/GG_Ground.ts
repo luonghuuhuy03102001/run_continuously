@@ -1,80 +1,56 @@
-import { _decorator, Component, director, Node, UITransform, Vec3, Canvas } from 'cc';
+import { _decorator, Component, RigidBody2D, Collider2D, v2, IPhysics2DContact, Contact2DType, Prefab, instantiate, find, tween, v3, Vec3 } from 'cc';
+import { GG_InstanGround } from './GG_InstanGround';
+import { GG_GamePlay } from './GG_GamePlay';
 const { ccclass, property } = _decorator;
 
-@ccclass('Ground')
-export class Ground extends Component {
+@ccclass('GG_Ground')
+export class GG_Ground extends Component {
 
-    @property({ type: Node })
-    public ground1: Node;
+    public speed: number = 10;
+    public rb;
+    public moveDir: number;
+    public collider;
 
-    @property({ type: Node })
-    public ground2: Node;
-
-    @property({ type: Node })
-    public ground3: Node;
-
-
-    // Create ground with variables
-    public groundWith1: number;
-    public groundWith2: number;
-    public groundWith3: number;
-
-    public tempStartLocation1 = new Vec3;
-    public tempStartLocation2 = new Vec3;
-    public tempStartLocation3 = new Vec3;
-
-    public gameSpeed: number;
+    private _ground;
+    private _gamePlay;
 
     onLoad() {
-        this.startUp();
+        this.rb = this.getComponent(RigidBody2D);
+        this.collider = this.getComponent(Collider2D);
+        this.collider.on(Contact2DType.BEGIN_CONTACT, this.onBeginContact, this);
     }
 
-    startUp() {
-        this.groundWith1 = this.ground1.getComponent(UITransform).width;
-        this.groundWith2 = this.ground2.getComponent(UITransform).width;
-        this.groundWith3 = this.ground3.getComponent(UITransform).width;
-
-        this.tempStartLocation1.x = 0;
-        this.tempStartLocation2.x = this.groundWith1;
-        this.tempStartLocation3.x = this.groundWith1 + this.groundWith2;
-
-        this.ground1.setPosition(this.tempStartLocation1);
-        this.ground2.setPosition(this.tempStartLocation2);
-        this.ground3.setPosition(this.tempStartLocation3);
+    update(dt: number): void {
+        // this.rb.linearVelocity = v2(this.moveDir * this.speed, this.rb.linearVelocity.y);
     }
 
-    update(deltaTime: number) {
+    protected start(): void {
+        
+    }
 
-        // console.log(deltaTime)
-        this.gameSpeed = 200;
- 
-        this.tempStartLocation1 = this.ground1.position;
-        this.tempStartLocation2 = this.ground2.position;
-        this.tempStartLocation3 = this.ground3.position;
+    // chạy
+    gg_Run() {
+        tween()
+            .target(this.node)
+            .to(5, { position: new Vec3(-1707, 0, 0) }, { easing: "linear" })
+            .call(() => {
+                this._gamePlay = find("Canvas/GamePlay");
+                this._gamePlay.getComponent(GG_GamePlay).gg_delete();
+            })
+            .start()
+    }
 
-        // get the speed and subtract from x
-        this.tempStartLocation1.x -= Math.floor(this.gameSpeed * 0.05);
-        this.tempStartLocation2.x -= Math.floor(this.gameSpeed * 0.05);
-        this.tempStartLocation3.x -= Math.floor(this.gameSpeed * 0.05);
+    // tắt hiệu ứng chạy
+    gg_cancelRun() {
+        this.moveDir = 0;
+    }
 
-        const scene = director.getScene();
-        const canvas = scene.getComponentInChildren(Canvas);
+    onBeginContact(selfCollider: Collider2D, otherCollider: Collider2D, contact: IPhysics2DContact | null) {
 
-        if(this.tempStartLocation1.x < (10 - this.groundWith1)) {
-            this.tempStartLocation1.x = canvas.getComponent(UITransform).width;
-        }
+    }
 
-        if(this.tempStartLocation2.x < (10 - this.groundWith2)) {
-            this.tempStartLocation2.x = canvas.getComponent(UITransform).width;
-        }
-
-        if(this.tempStartLocation3.x < (10 - this.groundWith3)) {
-            this.tempStartLocation3.x = canvas.getComponent(UITransform).width;
-        }
-
-        this.ground1.setPosition(this.tempStartLocation1);
-        this.ground2.setPosition(this.tempStartLocation2);
-        this.ground3.setPosition(this.tempStartLocation3);
+    gg_createGround() {
+        this.node.setPosition(0, 0);
     }
 }
 
